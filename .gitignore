@@ -1,6 +1,8 @@
 ByteTrack/
+ByteTrack_ReID/
 vehicle-counting-result.mp4
 vehicle-counting-result2.mp4
 yolov8x.pt
 runs/
+auxi.mp4
 .ipynb_checkpoints/
