@@ -1,0 +1,99 @@
+names:
+- airplane
+- apple
+- backpack
+- banana
+- baseball bat
+- baseball glove
+- bear
+- bed
+- bench
+- bicycle
+- bird
+- boat
+- book
+- bottle
+- bowl
+- broccoli
+- bus
+- cake
+- car
+- carrot
+- cat
+- cell phone
+- chair
+- clock
+- couch
+- cow
+- cup
+- dining table
+- dog
+- donut
+- elephant
+- fire hydrant
+- fork
+- frisbee
+- giraffe
+- hair drier
+- handbag
+- horse
+- hot dog
+- keyboard
+- kite
+- knife
+- laptop
+- microwave
+- motorcycle
+- mouse
+- orange
+- oven
+- parking meter
+- person
+- pizza
+- potted plant
+- refrigerator
+- remote
+- sandwich
+- scissors
+- sheep
+- sink
+- skateboard
+- skis
+- snowboard
+- spoon
+- sports ball
+- stop sign
+- suitcase
+- surfboard
+- teddy bear
+- tennis racket
+- tie
+- toaster
+- toilet
+- toothbrush
+- traffic light
+- train
+- truck
+- tv
+- umbrella
+- vase
+- wine glass
+- zebra
+- car
+- person
+- truck
+nc: 83
+train: [/mnt/Storage/Licenta-main/Licenta/Yolo-Retrain-1/train/images, /mnt/Storage/Licenta-main/Licenta/COCO-Dataset-18/test/images]
+val: [/mnt/Storage/Licenta-main/Licenta/Yolo-Retrain-1/valid/images, /mnt/Storage/Licenta-main/Licenta/COCO-Dataset-18/valid/images]
+test: ../test/images
+roboflow:
+  - workspace: microsoft
+    project: coco
+    version: 18
+    license: Private
+    url: https://universe.roboflow.com/microsoft/coco/dataset/18
+  - workspace: cava
+    project: yolo-retrain
+    version: 1
+    license: CC BY 4.0
+    url: https://universe.roboflow.com/cava/yolo-retrain/dataset/1

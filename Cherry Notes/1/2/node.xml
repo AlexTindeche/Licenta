@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cherrytree>
-  <node name="ByteTrack" unique_id="2" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1709887256" ts_lastsave="1709893480">
+  <node name="ByteTrack" unique_id="2" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1709887256" ts_lastsave="1711016775">
     <rich_text>• Imparte detectiile in 2 categorii: low score and high score
-• 
+• </rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
 • 
  </rich_text>
     <encoded_png char_offset="64" justification="left" link="" sha256sum="7d06ead0d05a0b1b7976086abf793de5e9383a167089e4c985520e42b52dac5f"/>
