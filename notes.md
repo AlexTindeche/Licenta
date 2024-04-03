@@ -7,7 +7,7 @@
 - [ ] De rulat pe video-urile date de Bogdan Alexe si vazut cum merge
     - [ ] Daca merge bine de facut o clusterizare a traiectoriilor masinilor si a pietonilor si vizualizarea lor
     - [ ] De identificat anomanlii care ies din aceste clustere
-- [ ] Definirea unor zone ale traficului in intersectie si identificarea si numararea vehiculelor care trec dintr-o zona in alta
+- [X] Definirea unor zone ale traficului in intersectie si identificarea si numararea vehiculelor care trec dintr-o zona in alta
 
 # Issues:
 1. [ ] Identificarea culorii stopului nu functioneaza foarte bine
@@ -35,5 +35,4 @@
 1. Identificare mai buna a claselor
 2. Identificarea mai buna pentru obiecte obturate
 3. Tracking mai bun (maybe Re-ID)
-4. Numararea obiectelor care trec dintr-o zona in alta si de in ce zona
-5. Clusterizarea directiilor
+4. Clusterizarea directiilor
