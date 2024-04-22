@@ -17,7 +17,7 @@
 
 # Tried, not working
 
-- Am incercat pair-uiesc ByteTracker cu FairMOT pentru a implementa si un Re-ID dar nu am reusit sa fac asta. Momentan ByteTrack functioneaza doar pe baza unui Kalman Filter si miscarea subiectilor, facand un IoU intre predictia data de Kalman Filter si pozitia bboxului din frame
+- Am incercat construirea unei retele siameze simple si sa o antrenez pe triplete anchor-similar-disimilar si apoi sa fac cosine similarity dar obtineam scoruri extrem de mici
 
 # Notes
 

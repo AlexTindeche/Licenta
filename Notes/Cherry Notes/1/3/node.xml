@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cherrytree>
+  <node name="Trajectory Clustering" unique_id="3" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1711016775" ts_lastsave="1711645943">
+    <rich_text>• De 3 tipuri:
+   ◇ Supervised
+   ◇ Unsupervised
+   ◇ Semi-Supervised
+• Pentru unsupervised sunt densely clustering models [</rich_text>
+    <rich_text link="webs https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10422581/#B33-sensors-23-06909">33</rich_text>
+    <rich_text>], hierarchical clustering models [</rich_text>
+    <rich_text link="webs https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10422581/#B34-sensors-23-06909">34</rich_text>
+    <rich_text>], and spectral clustering models [</rich_text>
+    <rich_text link="webs https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10422581/#B35-sensors-23-06909">35</rich_text>
+    <rich_text>].
+• By directly defining the density-reachable rule, densely clustering models can obtain the maximum set of density connected samples as cluster clusters. Hierarchical clustering models are divided into “top-down [</rich_text>
+    <rich_text link="webs https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10422581/#B36-sensors-23-06909">36</rich_text>
+    <rich_text>]” type and “bottom-up [</rich_text>
+    <rich_text link="webs https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10422581/#B37-sensors-23-06909">37</rich_text>
+    <rich_text>]” type. The former regards each trajectory sample as a cluster and gradually merges into larger clusters by defining the similarity between clusters; the latter gradually divides the trajectory data set into smaller groups by using the idea of divide and conquer until it meets the requirements of clustering.
+• Algoritmi:
+</rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+
+• Un nou algoritm de trajectory clustering: TRACLUS
+• Ce face?
+   ◇ Simplifica traiectoriile partitionandu-le si construind un singur segment aproximativ pentru fiecare paritie
+   ◇ O clusterizare asemanatoare cu DBSCAN pe acele segmente
+   ◇ Pentru fiecare cluster se gaseste o singura directie aproximativa
+
+• DBSCAN (Left) vs Nothing (right) on full number of points
+• </rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+• TRACLUS (left) vs nothing (right) on 100 points
+• </rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+• DBSCAN (right) vs nothing (left) on 100 points
+• </rich_text>
+    <rich_text justification="left"></rich_text>
+    <rich_text>
+
+
+
+
+
+
+						     MDL simplification																	RDP simplification														      OPTICS clustering
+
+																																																		          Aglomerative clustering
+ 	 																																													
+ 
+ 
+ 
+•  t-SNE
+• </rich_text>
+    <encoded_png char_offset="768" justification="left" link="" sha256sum="bb7012434af528cd0875853d629dce579ddde85c0ea5a7d2b19d784b6313fb50"/>
+    <encoded_png char_offset="1143" justification="left" link="" sha256sum="2d7ead166a889e8ed35eb64b8d8b5f2b8ec41cf902a5a36b20a4b8d974750d5f"/>
+    <encoded_png char_offset="1144" justification="left" link="" sha256sum="e74f67dc1c7277799f5e1e81440a1aac41c45c5c3376742bfedfd07aefc21f6a"/>
+    <encoded_png char_offset="1198" justification="left" link="" sha256sum="b1a8218b7e1d339d0895bffffc1d068485bb818295ee178ea876290ca3241444"/>
+    <encoded_png char_offset="1199" justification="left" link="" sha256sum="0fcbb20bf466d73f2efbbe113943dfac1b459aac3435b10aab5ec4777110fa3a"/>
+    <encoded_png char_offset="1252" justification="left" link="" sha256sum="f2e99e74b7ce35974de3f327c21182706ff7001dce4c2e1a16a17d68c4972185"/>
+    <encoded_png char_offset="1253" justification="left" link="" sha256sum="c63f24a0518b61e97c1d14afe95647b6796aaf36ffa13bf0bfda5fab54b4ede3"/>
+    <encoded_png char_offset="1259" justification="left" link="" sha256sum="726e674fb43909bbee62d242e72df0501fcaf9b8ba7b8a94f55f85aef74e120f"/>
+    <encoded_png char_offset="1260" justification="left" link="" sha256sum="46da76ea07739c763b152d1432744d1c5d200d031b5fad5f848b25559c3fa377"/>
+    <encoded_png char_offset="1365" justification="left" link="" sha256sum="d480a3f6771dacea839594b7d48aae3aa728823976088b9d39285a7b7f84215e"/>
+    <encoded_png char_offset="1366" justification="left" link="" sha256sum="c8c294d045c656e61b25b6645a38c84e0279f3246b6f7ae391b45b3d7819d5e5"/>
+    <encoded_png char_offset="1367" justification="left" link="" sha256sum="7dbe64421a01a7d84afafcc0ead7f803b2a31df1e5f1fee4fb10da25f0a08c02"/>
+    <encoded_png char_offset="1501" justification="left" link="" sha256sum="d0d1c0ff3505efd95c330931a5d51eb0d99d0d3185dc192223338fb75ddd16e7"/>
+  </node>
+</cherrytree>
