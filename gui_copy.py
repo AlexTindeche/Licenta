@@ -1057,13 +1057,13 @@ class Run(QObject):
                         vehicle_counts[f"from {count[0]+1} to {count[1]+1}"].append((time / 1000, transition_counts[count]))
                     
                 for i, line_counter in enumerate(self.line_counters):
-                    if (i, "in") not in vehicle_counts:
+                    if (i, "in") not in pedestrian_counts:
                         pedestrian_counts[(i, "in")] = [(time / 1000, line_counter.in_count)]
                     else:
                         pedestrian_counts[(i, "in")].append((time / 1000, line_counter.in_count))
 
 
-                    if (i, "out") not in vehicle_counts:
+                    if (i, "out") not in pedestrian_counts:
                         pedestrian_counts[(i, "out")] = [(time / 1000, line_counter.out_count)]
                     else:
                         
@@ -1094,8 +1094,6 @@ class Run(QObject):
         # Max time is the total time of the video
         max_time = video_info.total_frames / fps
         for i, count in enumerate(vehicle_counts.keys()):
-            print("---------------------")
-            print(f"{count} : {vehicle_counts[count]}")
             times, counts = zip(*vehicle_counts[count])
             times = (0,) + times
             counts = (0,) + counts
@@ -1113,11 +1111,12 @@ class Run(QObject):
                         arrowprops=dict(facecolor='black', arrowstyle='->', linewidth=1))
             if max_y > max_value:
                 max_value = max_y
-        plt.legend(title = "Numărul de pietoni ce trec dintr-o zonă în alta")
+        plt.legend()
         x_label = "Timp (s)"
         y_label = "Numărul de pietoni"
         plt.xlabel(x_label)
         plt.ylabel(y_label)
+        plt.title("Numărul de pietoni ce trec dintr-o zonă în alta")
         plt.axis([0, max_time, 0, max_value + 1])
         plt.legend()
         plt.xticks(np.arange(0, max_time, 10))
@@ -1127,8 +1126,6 @@ class Run(QObject):
         plt.figure(figsize=(10, 6))
         max_value = 0
         for i, count in enumerate(pedestrian_counts.keys()):
-            print("---------------------")
-            print(f"{count} : {pedestrian_counts[count]}")
             times, counts = zip(*pedestrian_counts[count])
             times = (0,) + times
             counts = (0,) + counts
@@ -1146,11 +1143,12 @@ class Run(QObject):
                         arrowprops=dict(facecolor='black', arrowstyle='->', linewidth=1))
             if max_y > max_value:
                 max_value = max_y
-        plt.legend(title = "Numărul de pietoni ce trec dintr-o zonă în alta")
+        plt.legend()
         x_label = "Timp (s)"
         y_label = "Numărul de pietoni"
         plt.xlabel(x_label)
         plt.ylabel(y_label)
+        plt.title("Numărul de pietoni ce trec dintr-o zonă în alta")
         plt.axis([0, max_time, 0, max_value + 1])
         plt.legend()
         plt.xticks(np.arange(0, max_time, 10))
@@ -1316,16 +1314,16 @@ class Run(QObject):
         print(len(all_trajectory_clusters.keys()))
 
         for cluster in all_trajectory_clusters.keys():
-            print(f"Cluster {cluster}: {len(all_trajectory_clusters[cluster])} trajectories")
+            print(f"Grupul {cluster} conține: {len(all_trajectory_clusters[cluster])} traiectorii")
             plt.figure(figsize=(10, 6))
             for trajectory in all_trajectory_clusters[cluster]:
                 plt.plot(trajectory[:, 0], trajectory[:, 1])
 
             plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             # Plot the number of trajectories in the cluster
-            plt.title(f"Cluster {cluster}: {len(all_trajectory_clusters[cluster])} trajectories")
-            plt.xlabel("X Coordinate")
-            plt.ylabel("Y Coordinate")
+            plt.title(f"Grupul {cluster} conține: {len(all_trajectory_clusters[cluster])} traiectorii")
+            plt.xlabel("Coordonata X")
+            plt.ylabel("Coordonata Y")
             # Save the plot
             plt.savefig(f"gui_utils/results/clusters/cluster_{cluster}.png")
 
@@ -1338,21 +1336,21 @@ class Run(QObject):
         # Plotting the average trajectories
         plt.figure(figsize=(10, 6))
         for cluster_key, avg_traj in average_trajectories.items():
-            plt.plot(avg_traj[:, 0], avg_traj[:, 1], label=f"Cluster {cluster_key}")
+            plt.plot(avg_traj[:, 0], avg_traj[:, 1], label=f"Grupul {cluster_key}")
         plt.legend()
-        plt.title("Average Trajectories for Each Cluster")
-        plt.xlabel("X Coordinate")
-        plt.ylabel("Y Coordinate")
+        plt.title("Traiectoria medie pentru fiecare grup")
+        plt.xlabel("Coordonata X")
+        plt.ylabel("Coordonata Y")
         plt.savefig("gui_utils/results/average_trajectories.png")
 
         # Plot on the frame
         plt.figure(figsize=(10, 6))
         for cluster_key, avg_traj in average_trajectories.items():
-            plt.plot(avg_traj[:, 0], avg_traj[:, 1], label=f"Cluster {cluster_key}")
+            plt.plot(avg_traj[:, 0], avg_traj[:, 1], label=f"Grupul {cluster_key}")
         plt.legend()
-        plt.title("Average Trajectories for Each Cluster")
-        plt.xlabel("X Coordinate")
-        plt.ylabel("Y Coordinate")
+        plt.title("Traiectoriile medii pe imagine")
+        plt.xlabel("Coordonata X")
+        plt.ylabel("Coordonata Y")
         plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         plt.savefig("gui_utils/results/average_trajectories_on_frame.png")
 
@@ -1361,7 +1359,7 @@ class Run(QObject):
         for cluster_key, avg_traj in average_trajectories.items():
             plt.figure(figsize=(10, 6))
             # Plot the trajectory
-            plt.plot(avg_traj[:, 0], avg_traj[:, 1], label=f"Cluster {cluster_key}", alpha=0.5)  # semi-transparent line
+            plt.plot(avg_traj[:, 0], avg_traj[:, 1], label=f"Grupul {cluster_key}", alpha=0.5)  # semi-transparent line
             # Add arrows to show the direction of the trajectory
             steps = len(avg_traj)  # Number of steps in the trajectory
             skip = max(1, steps // 20)  # Skip some points to avoid clutter
@@ -1376,9 +1374,9 @@ class Run(QObject):
             if 'frame' in locals():
                 plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             plt.legend()
-            plt.title(f"Average Trajectory for Cluster {cluster_key}")
-            plt.xlabel("X Coordinate")
-            plt.ylabel("Y Coordinate")
+            plt.title(f"Traiectoria medie pentru grupul {cluster_key}")
+            plt.xlabel("Coordonata X")
+            plt.ylabel("Coordonata Y")
             plt.savefig(f"gui_utils/results/average_trajectories/average_trajectory_{cluster_key}.png")
 
         for cluster in all_trajectory_clusters:
@@ -1728,19 +1726,13 @@ class MainWindow(QMainWindow):
         if os.path.exists("gui_utils/results/average_trajectories.png"):
             self.display_image("gui_utils/results/average_trajectories.png", self.textEdit3)
 
-        # Show the data from transition_counts.csv
-        self.display_paragraph("Numarul de tranzitii intre zone", self.textEdit3)
-        if os.path.exists("gui_utils/results/transition_counts.csv"):
-            df = pd.read_csv("gui_utils/results/transition_counts.csv")
-            table = QTableWidget(self.tab3)
-            table.setRowCount(df.shape[0])
-            table.setColumnCount(df.shape[1])
-            table.setHorizontalHeaderLabels(df.columns)
-            table.setVerticalHeaderLabels(df.index.astype(str))
-            for i in range(df.shape[0]):
-                for j in range(df.shape[1]):
-                    table.setItem(i, j, QTableWidgetItem(str(df.iloc[i, j])))
-            self.tab3Layout.addWidget(table)
+        self.display_paragraph("Număru de vehicule ce trec dintr-o zonă în alta", self.textEdit3)
+        if os.path.exists("gui_utils/results/vehicle_counts.png"):
+            self.display_image("gui_utils/results/vehicle_counts.png", self.textEdit3)
+
+        self.display_paragraph("Numărul de pietoni ce traversează strada", self.textEdit3)
+        if os.path.exists("gui_utils/results/pedestrian_counts.png"):
+            self.display_image("gui_utils/results/pedestrian_counts.png", self.textEdit3)
 
         # Reset the tab
         self.notebook.setCurrentIndex(2)
