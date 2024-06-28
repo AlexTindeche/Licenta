@@ -831,12 +831,12 @@ class Run(QObject):
 
                 # filtering out detections without trackers
                 mask = np.array([tracker_id is not None for tracker_id in detections.tracker_id], dtype=bool)
+                detections.filter(mask=mask, inplace=True)
                 mask_people = np.array([tracker_id is not None for tracker_id in detections.tracker_id], dtype=bool)
                 mask_vehicles = np.array([tracker_id is not None for tracker_id in detections.tracker_id], dtype=bool)
                 detections_people = detections.filter(mask=mask_people, inplace=False)
                 detections_vehicles = detections.filter(mask=mask_vehicles, inplace=False)
-                # detections_people.filter(mask=mask_people, inplace=True)
-                # detections_vehicles.filter(mask=mask_vehicles, inplace=True)
+
 
                 time = frame_time_stamp[frame_nr][1]
 
