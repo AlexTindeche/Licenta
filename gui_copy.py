@@ -218,6 +218,7 @@ optimizer = optim.Adam(siamese.parameters(), lr = 0.0005 )
 siamese.load_state_dict(torch.load('siamese_model_contrastive_more_epochs.pth'))
 
 
+
 transform = transforms.Compose(
     [
         transforms.Resize((target_shape[0], target_shape[1])),
