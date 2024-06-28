@@ -196,6 +196,7 @@ class SiameseNet(nn.Module):
 
     
 siamese = SiameseNet().cuda()
+siamese_pedestrians = SiameseNet().cuda()
 
 
 class ContrastiveLoss(nn.Module):
@@ -216,6 +217,7 @@ optimizer = optim.Adam(siamese.parameters(), lr = 0.0005 )
 
 # Load the model
 siamese.load_state_dict(torch.load('siamese_model_contrastive_more_epochs.pth'))
+siamese_pedestrians.load_state_dict(torch.load('siamese_model_contrastive_pedestrians_1.pth'))
 
 
 
@@ -906,6 +908,7 @@ class Run(QObject):
         vehicle_counts = dict()
         pedestrian_counts = dict()
         track_history = defaultdict(lambda: [])
+        track_history_pedestrians = defaultdict(lambda: [])
         # Frame history, a list of images
         frame_history = OrderedDict()
         with VideoSink(self.TARGET_VIDEO_PATH, video_info) as sink:
@@ -975,9 +978,9 @@ class Run(QObject):
                 # Verify if the object is new or if it was interrupted
                 for i, (detection) in enumerate(detections_vehicles):
                 
-                    new_track_id = determine_last_track_id(detection, track_history, frame, frame_nr, frame_history, eps=50)
+                    new_track_id = determine_last_track_id(detection, track_history, frame, frame_nr, frame_history, eps=50, siamese=siamese)
                     if new_track_id is not None:
-                        if new_track_id  not in detections_vehicles.tracker_id or new_track_id not in detections.tracker_id or new_track_id not in detections_people.tracker_id:
+                        if new_track_id  not in detections_vehicles.tracker_id and new_track_id not in detections.tracker_id and new_track_id not in detections_people.tracker_id:
                             print('---')
                             print("old: ", detection[-1])
                             print("new: ", new_track_id)         
@@ -993,6 +996,27 @@ class Run(QObject):
                             byte_tracker.update_strack(tracked_stracks)
 
                             detections_vehicles.tracker_id[i] = new_track_id
+
+                for i, (detection) in enumerate(detections_people):
+                
+                    new_track_id = determine_last_track_id(detection, track_history_pedestrians, frame, frame_nr, frame_history, eps=50, siamese=siamese_pedestrians)
+                    if new_track_id is not None:
+                        if new_track_id  not in detections_vehicles.tracker_id and new_track_id not in detections.tracker_id and new_track_id not in detections_people.tracker_id:
+                            print('---')
+                            print("old: ", detection[-1])
+                            print("new: ", new_track_id)         
+                            # Find the track that was interrupted in the tracks list
+                            for j, track in enumerate(tracked_stracks):
+                                if track.track_id == detection[-1]:
+                                    # print(new_track_id)
+                                    print(tracked_stracks[j])
+                                    tracked_stracks[j].track_id = new_track_id
+                                    print(tracked_stracks[j])
+                                    print(time / 1000)
+                                    break
+                            byte_tracker.update_strack(tracked_stracks)
+
+                            detections_people.tracker_id[i] = new_track_id
 
                         
                         
@@ -1011,11 +1035,18 @@ class Run(QObject):
                         continue
                     track.append(((x1, y1, x2, y2), frame_nr))
                     frame_history[frame_nr] = frame
-                    # if len(track) > 30:
-                    #     track.pop(0)
-                # if frame_nr == 3:
-                #     break
-                        # Show frame number in the video
+
+                # Do the same for pedestrians
+                for i, (xyxy, confidence, class_id, track_id) in enumerate(detections_people):
+                    x1, y1, x2, y2 = xyxy.astype(int)
+                    track = track_history_pedestrians[track_id]
+                    # Filter
+                    # if the point is too far from the last point, ignore it
+                    if len(track) > 0 and np.linalg.norm(np.array(track[-1][0][:2]) - np.array([x1, y1])) > 100:
+                        continue
+                    track.append(((x1, y1, x2, y2), frame_nr))
+
+
                 traffic_zones, detection_in_zone, counts = self.count_trajectories(self.polygons, detections, detection_position)
                 for _, confidence, class_id, tracker_id in detections:
                     if tracker_id is not None and detection_in_zone.get(tracker_id, -1) >= 0:
