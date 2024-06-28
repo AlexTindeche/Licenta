@@ -31,6 +31,7 @@ from scipy.spatial import distance as dist
 import pickle
 from scipy.ndimage import gaussian_filter1d
 from scipy.spatial.distance import directed_hausdorff
+from supervision.tools.line_counter import LineCounter
 
 from sklearn.manifold import TSNE
 from scipy.interpolate import interp1d
@@ -350,6 +351,73 @@ class Polygon:
                             if edge.start.x == edge.end.x or point.x <= x_intersection:
                                 counter += 1
         return counter % 2 != 0
+    
+class LineCounter(LineCounter):
+    def update(self, detections: Detections):
+        """
+        Update the in_count and out_count for the detections that cross the line.
+
+        :param detections: Detections : The detections for which to update the counts.
+        """
+        for xyxy, confidence, class_id, tracker_id in detections:
+            # If there is no tracker_id, we skip the detection
+            if tracker_id is None:
+                continue
+
+            # See how many points are on each side of the line
+            x1, y1, x2, y2 = xyxy
+            # anchors = [
+            #     Point(x=x1, y=y1),
+            #     Point(x=x1, y=y2),
+            #     Point(x=x2, y=y1),
+            #     Point(x=x2, y=y2),
+            # ]
+
+            # Workaround for the fact that the bboxes are too big
+
+            '''
+                Introduce a padding so the bbox will be the one in the interior of the original one, like so:
+                |-----------------------|
+                |  \                  / |
+                |   \---------------/   |
+                |   |Bbox w padding |   |
+                |   /---------------\   |
+                | /                  \  |
+                |-----------------------|
+            
+            '''
+            # Preduce the box by 40% of its original size
+            percentange = 0.3
+            anchors = [
+                Point(x=x1 + (x2 - x1) * percentange, y=y1 + (y2 - y1) * percentange),
+                Point(x=x1 + (x2 - x1) * percentange, y=y2 - (y2 - y1) * percentange),
+                Point(x=x2 - (x2 - x1) * percentange, y=y1 + (y2 - y1) * percentange),
+                Point(x=x2 - (x2 - x1) * percentange, y=y2 - (y2 - y1) * percentange),
+            ]
+
+
+            # Bool list. The truth value indicates the side of the line the point is on.
+            triggers = [self.vector.is_in(point=anchor) for anchor in anchors]
+
+            # detection is partially in and partially out
+            if len(set(triggers)) == 2:
+                continue
+
+            tracker_state = triggers[0]
+            # handle new detection
+            if tracker_id not in self.tracker_state:
+                self.tracker_state[tracker_id] = tracker_state
+                continue
+
+            # handle detection on the same side of the line
+            if self.tracker_state.get(tracker_id) == tracker_state:
+                continue
+
+            self.tracker_state[tracker_id] = tracker_state
+            if tracker_state:
+                self.in_count += 1
+            else:
+                self.out_count += 1
 
 # converts Detections into format that can be consumed by match_detections_with_tracks function
 def detections2boxes(detections: Detections) -> np.ndarray:
@@ -426,9 +494,15 @@ class Run(QObject):
         frame = next(iterator)
         print(frame.shape)
         self.polygons = self.select_polygons(frame)
+        self.lines = self.select_lines(frame)
         self.w1 = 0.20
         self.w2 = 0.33
         self.w3 = 0.47
+
+        # Set up the line counters
+        self.line_counters = []
+        for i, line in enumerate(self.lines):
+            self.line_counters.append(LineCounter(start=line[0], end=line[1]))
         
 
 
@@ -529,6 +603,59 @@ class Run(QObject):
 
         return polygons
     
+    def select_lines(self, img):
+        # Initialize global variables
+        points = []  # To store the points where you click
+        lines = []
+
+        resized_img = cv2.resize(img, (1000, 800))
+
+        # Calculate scale factors
+        originalHeight, originalWidth = img.shape[:2]
+        scaleFactorX = originalWidth / 1000
+        scaleFactorY = originalHeight / 800
+
+        # Callback function for mouse events
+        def click_event(event, x, y, flags, param):
+            nonlocal points, img, scaleFactorX, scaleFactorY
+            if event == cv2.EVENT_LBUTTONDOWN:  # Left button click
+                if len(points) < 2:  # Ensure we only have 2 points
+                    # Adjust x, y back to original image scale
+                    origX = int(x * scaleFactorX)
+                    origY = int(y * scaleFactorY)
+                    points.append((origX, origY))
+                    cv2.circle(resized_img, (x, y), 5, (0, 0, 255), -1)  # Draw the dot on resized image
+                    if len(points) == 2:
+                        lines.append((points[0], points[1]))
+                        cv2.line(resized_img, 
+                            (int(points[0][0] // scaleFactorX), int(points[0][1] // scaleFactorY)),
+                            (int(points[1][0] // scaleFactorX), int(points[1][1] // scaleFactorY)), 
+                            (255, 0, 0), 2)  # Draw the line on resized image
+                        print(f"Point 1: {points[0]}, Point 2: {points[1]}")  # Print coordinates of original points
+                        cv2.imshow("image", resized_img)  # Show the image with the line
+                        
+            if len(points) == 2:  # Reset after 2 points for new line drawing
+                points.clear()
+
+
+        cv2.namedWindow("image")
+        cv2.setMouseCallback("image", click_event)
+
+        cv2.imshow("image", resized_img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        lines_return = []
+        for i, line in enumerate(lines):
+            # line_start = Point(lines[0][0][0], lines[0][0][1])
+            # line_end = Point(lines[0][1][0], lines[0][1][1])
+            line_start = Point(line[0][0], line[0][1])
+            line_end = Point(line[1][0], line[1][1])
+            lines_return.append((line_start, line_end))
+            print(f"Line {i+1}: {line_start}, {line_end}")
+
+        return lines_return
+    
     def reduce_trajectory(self, trajectory, num_points):
         """
         Reduce the number of points in a trajectory, using interpolation, to a given number of points.
@@ -573,8 +700,6 @@ class Run(QObject):
         polygons = [Polygon(polygon) for polygon in traffic_zones]
         nr_zones = len(polygons)
         counts = dict()
-        for i in range(nr_zones):
-            counts[i] = 0
 
         # See in which zone the detection is
         # For every detection verify all the polygons and see if it is in one of them
@@ -777,6 +902,8 @@ class Run(QObject):
         # open target video file
         detection_position = dict()
         transition_counts = dict()
+        vehicle_counts = dict()
+        pedestrian_counts = dict()
         track_history = defaultdict(lambda: [])
         # Frame history, a list of images
         frame_history = OrderedDict()
@@ -832,10 +959,14 @@ class Run(QObject):
                 # filtering out detections without trackers
                 mask = np.array([tracker_id is not None for tracker_id in detections.tracker_id], dtype=bool)
                 detections.filter(mask=mask, inplace=True)
-                mask_people = np.array([tracker_id is not None for tracker_id in detections.tracker_id], dtype=bool)
-                mask_vehicles = np.array([tracker_id is not None for tracker_id in detections.tracker_id], dtype=bool)
+                mask_people = np.array([class_id in self.CLASS_ID_PEOPLE for class_id in detections.class_id], dtype=bool)
+                mask_vehicles = np.array([class_id in self.CLASS_ID_VEHICLE for class_id in detections.class_id], dtype=bool)
                 detections_people = detections.filter(mask=mask_people, inplace=False)
                 detections_vehicles = detections.filter(mask=mask_vehicles, inplace=False)
+
+                # Update line counters
+                for i in range(len(self.line_counters)):
+                    self.line_counters[i].update(detections=detections_people)
 
 
                 time = frame_time_stamp[frame_nr][1]
@@ -890,7 +1021,7 @@ class Run(QObject):
                         detection_position[tracker_id] = detection_in_zone.get(tracker_id, -1)
                 for count in counts.keys():
                     if count not in transition_counts.keys():
-                        transition_counts[count] = 0
+                        transition_counts[count] = counts[count]
                     transition_counts[count] += counts[count]
                 labels = [
                     f"#{tracker_id} {detection_in_zone.get(tracker_id, -1) + 1}" if tracker_id is not None else f"#{tracker_id}"
@@ -917,12 +1048,114 @@ class Run(QObject):
                 #         color = (0, 255, 0)
                 #     for j in range(len(polygon)):
                 #         cv2.line(frame, (polygon[j].x, polygon[j].y), (polygon[(j+1) % len(polygon)].x, polygon[(j+1) % len(polygon)].y), color, 2)
+
+                # Update counts
+                for i, count in enumerate(transition_counts.keys()):
+                    if f"from {count[0]+1} to {count[1]+1}" not in vehicle_counts:
+                        vehicle_counts[f"from {count[0]+1} to {count[1]+1}"] = [(time / 1000, transition_counts[count])]
+                    else:
+                        vehicle_counts[f"from {count[0]+1} to {count[1]+1}"].append((time / 1000, transition_counts[count]))
+                    
+                for i, line_counter in enumerate(self.line_counters):
+                    if (i, "in") not in vehicle_counts:
+                        pedestrian_counts[(i, "in")] = [(time / 1000, line_counter.in_count)]
+                    else:
+                        pedestrian_counts[(i, "in")].append((time / 1000, line_counter.in_count))
+
+
+                    if (i, "out") not in vehicle_counts:
+                        pedestrian_counts[(i, "out")] = [(time / 1000, line_counter.out_count)]
+                    else:
+                        
+                        pedestrian_counts[(i, "out")].append((time / 1000, line_counter.out_count))
+
+
                 sink.write_frame(frame)
 
+        # Save the results to csv
+        df = pd.DataFrame(columns=["time", "id", "count"])
+        for i, count in enumerate(vehicle_counts.keys()):
+            for time, c in vehicle_counts[count]:
+                new_df = pd.DataFrame([[time, count, c]], columns=["time", "id", "count"])
+                df = pd.concat([df, new_df])
+        df.to_csv("gui_utils/results/vehicle_counts.csv", index=False)
 
-        # Save the number of transitions in a csv file
-        df = pd.DataFrame(transition_counts.items(), columns=['Transition', 'Count'])
-        df.to_csv('gui_utils/results/transition_counts.csv', index=False)
+        df = pd.DataFrame(columns=["time", "id", "count"])
+        for i, count in enumerate(pedestrian_counts.keys()):
+            for time, c in pedestrian_counts[count]:
+                new_df = pd.DataFrame([[time, count, c]], columns=["time", "id", "count"])
+                df = pd.concat([df, new_df])
+        df.to_csv("gui_utils/results/pedestrian_counts.csv", index=False)
+
+
+        # Plot counts
+        plt.figure(figsize=(10, 6))
+        max_value = 0
+        # Max time is the total time of the video
+        max_time = video_info.total_frames / fps
+        for i, count in enumerate(vehicle_counts.keys()):
+            print("---------------------")
+            print(f"{count} : {vehicle_counts[count]}")
+            times, counts = zip(*vehicle_counts[count])
+            times = (0,) + times
+            counts = (0,) + counts
+            # Add a point at the same y level just before the next point
+            for j in range(1, len(times)):
+                times = times[:j] + (times[j],) + times[j:]
+                counts = counts[:j] + (counts[j-1],) + counts[j:]
+            plt.plot(times, counts, label=f"{count}")
+            # Find maximum y value for the line
+            max_y = max(counts)
+            xmax = times[counts.index(max_y)]
+            ymax = max_y
+            # Annotate the maximum point
+            plt.annotate(max_y, xy=(xmax, ymax), xytext=(xmax, ymax+0.1),
+                        arrowprops=dict(facecolor='black', arrowstyle='->', linewidth=1))
+            if max_y > max_value:
+                max_value = max_y
+        plt.legend(title = "Numărul de pietoni ce trec dintr-o zonă în alta")
+        x_label = "Timp (s)"
+        y_label = "Numărul de pietoni"
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.axis([0, max_time, 0, max_value + 1])
+        plt.legend()
+        plt.xticks(np.arange(0, max_time, 10))
+        plt.yticks(np.arange(0, max_value + 1, 10))
+        plt.savefig("gui_utils/results/vehicle_counts.png")
+
+        plt.figure(figsize=(10, 6))
+        max_value = 0
+        for i, count in enumerate(pedestrian_counts.keys()):
+            print("---------------------")
+            print(f"{count} : {pedestrian_counts[count]}")
+            times, counts = zip(*pedestrian_counts[count])
+            times = (0,) + times
+            counts = (0,) + counts
+            # Add a point at the same y level just before the next point
+            for j in range(1, len(times)):
+                times = times[:j] + (times[j],) + times[j:]
+                counts = counts[:j] + (counts[j-1],) + counts[j:]
+            plt.plot(times, counts, label=f"{count}")
+            # Find maximum y value for the line
+            max_y = max(counts)
+            xmax = times[counts.index(max_y)]
+            ymax = max_y
+            # Annotate the maximum point
+            plt.annotate(max_y, xy=(xmax, ymax), xytext=(xmax, ymax+0.1),
+                        arrowprops=dict(facecolor='black', arrowstyle='->', linewidth=1))
+            if max_y > max_value:
+                max_value = max_y
+        plt.legend(title = "Numărul de pietoni ce trec dintr-o zonă în alta")
+        x_label = "Timp (s)"
+        y_label = "Numărul de pietoni"
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.axis([0, max_time, 0, max_value + 1])
+        plt.legend()
+        plt.xticks(np.arange(0, max_time, 10))
+        plt.yticks(np.arange(0, max_value + 1, 10))
+        plt.savefig("gui_utils/results/pedestrian_counts.png")
 
         # Save the data
         trajectories = []
