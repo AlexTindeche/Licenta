@@ -1105,19 +1105,19 @@ class Run(QObject):
                 sink.write_frame(frame)
 
         # Save the results to csv
-        df = pd.DataFrame(columns=["time", "id", "count"])
-        for i, count in enumerate(vehicle_counts.keys()):
-            for time, c in vehicle_counts[count]:
-                new_df = pd.DataFrame([[time, count, c]], columns=["time", "id", "count"])
-                df = pd.concat([df, new_df])
-        df.to_csv("gui_utils/results/vehicle_counts.csv", index=False)
+        # df = pd.DataFrame(columns=["time", "id", "count"])
+        # for i, count in enumerate(vehicle_counts.keys()):
+        #     for time, c in vehicle_counts[count]:
+        #         new_df = pd.DataFrame([[time, count, c]], columns=["time", "id", "count"])
+        #         df = pd.concat([df, new_df])
+        # df.to_csv("gui_utils/results/vehicle_counts.csv", index=False)
 
-        df = pd.DataFrame(columns=["time", "id", "count"])
-        for i, count in enumerate(pedestrian_counts.keys()):
-            for time, c in pedestrian_counts[count]:
-                new_df = pd.DataFrame([[time, count, c]], columns=["time", "id", "count"])
-                df = pd.concat([df, new_df])
-        df.to_csv("gui_utils/results/pedestrian_counts.csv", index=False)
+        # df = pd.DataFrame(columns=["time", "id", "count"])
+        # for i, count in enumerate(pedestrian_counts.keys()):
+        #     for time, c in pedestrian_counts[count]:
+        #         new_df = pd.DataFrame([[time, count, c]], columns=["time", "id", "count"])
+        #         df = pd.concat([df, new_df])
+        # df.to_csv("gui_utils/results/pedestrian_counts.csv", index=False)
 
 
         # Plot counts
@@ -1126,13 +1126,21 @@ class Run(QObject):
         # Max time is the total time of the video
         max_time = video_info.total_frames / fps
         for i, count in enumerate(vehicle_counts.keys()):
+            # print("---------------------")
+            # print(f"{count} : {vehicle_counts[count]}")
             times, counts = zip(*vehicle_counts[count])
             times = (0,) + times
             counts = (0,) + counts
             # Add a point at the same y level just before the next point
-            for j in range(1, len(times)):
-                times = times[:j] + (times[j],) + times[j:]
-                counts = counts[:j] + (counts[j-1],) + counts[j:]
+            # for j in range(1, len(times)):
+            #     times = times[:j] + (times[j],) + times[j:]
+            #     counts = counts[:j] + (counts[j-1],) + counts[j:]
+            j = 1
+            while j < len(times):
+                if times[j] - times[j-1] > 10:
+                    times = times[:j] + (times[j],) + times[j:]
+                    counts = counts[:j] + (counts[j-1],) + counts[j:]
+                j += 1
             plt.plot(times, counts, label=f"{count}")
             # Find maximum y value for the line
             max_y = max(counts)
@@ -1143,28 +1151,44 @@ class Run(QObject):
                         arrowprops=dict(facecolor='black', arrowstyle='->', linewidth=1))
             if max_y > max_value:
                 max_value = max_y
-        plt.legend()
+        plt.legend(title = "Numărul de pietoni ce trec dintr-o zonă în alta")
         x_label = "Timp (s)"
         y_label = "Numărul de pietoni"
         plt.xlabel(x_label)
         plt.ylabel(y_label)
-        plt.title("Numărul de pietoni ce trec dintr-o zonă în alta")
         plt.axis([0, max_time, 0, max_value + 1])
         plt.legend()
-        plt.xticks(np.arange(0, max_time, 10))
-        plt.yticks(np.arange(0, max_value + 1, 10))
+        plt.grid()
+        # plt.xticks(np.arange(0, max_time, max_time // 15))
+        # plt.yticks(np.arange(0, max_value + 1, max_value // 20))
+        if max_time < 15:
+            plt.xticks(np.arange(0, max_time + 1))
+        else:
+            plt.xticks(np.arange(0, max_time + 1, max_time // 15))
+        if max_value < 20:
+            plt.yticks(np.arange(0, max_value + 1))
+        else:
+            plt.yticks(np.arange(0, max_value + 1, max_value // 20))
         plt.savefig("gui_utils/results/vehicle_counts.png")
 
         plt.figure(figsize=(10, 6))
         max_value = 0
         for i, count in enumerate(pedestrian_counts.keys()):
+            # print("---------------------")
+            # print(f"{count} : {pedestrian_counts[count]}")
             times, counts = zip(*pedestrian_counts[count])
             times = (0,) + times
             counts = (0,) + counts
             # Add a point at the same y level just before the next point
-            for j in range(1, len(times)):
-                times = times[:j] + (times[j],) + times[j:]
-                counts = counts[:j] + (counts[j-1],) + counts[j:]
+            # for j in range(1, len(times)):
+            #     times = times[:j] + (times[j],) + times[j:]
+            #     counts = counts[:j] + (counts[j-1],) + counts[j:]
+            j = 1
+            while j < len(times):
+                if times[j] - times[j-1] > 10:
+                    times = times[:j] + (times[j],) + times[j:]
+                    counts = counts[:j] + (counts[j-1],) + counts[j:]
+                j += 1
             plt.plot(times, counts, label=f"{count}")
             # Find maximum y value for the line
             max_y = max(counts)
@@ -1175,16 +1199,24 @@ class Run(QObject):
                         arrowprops=dict(facecolor='black', arrowstyle='->', linewidth=1))
             if max_y > max_value:
                 max_value = max_y
-        plt.legend()
+        plt.legend(title = "Numărul de pietoni ce trec dintr-o zonă în alta")
         x_label = "Timp (s)"
         y_label = "Numărul de pietoni"
         plt.xlabel(x_label)
         plt.ylabel(y_label)
-        plt.title("Numărul de pietoni ce trec dintr-o zonă în alta")
         plt.axis([0, max_time, 0, max_value + 1])
+        plt.grid()
         plt.legend()
-        plt.xticks(np.arange(0, max_time, 10))
-        plt.yticks(np.arange(0, max_value + 1, 10))
+        # plt.xticks(np.arange(0, max_time, max_time // 15))
+        # plt.yticks(np.arange(0, max_value + 1, max_value // 20))
+        if max_time < 15:
+            plt.xticks(np.arange(0, max_time + 1))
+        else:
+            plt.xticks(np.arange(0, max_time + 1, max_time // 15))
+        if max_value < 20:
+            plt.yticks(np.arange(0, max_value + 1))
+        else:
+            plt.yticks(np.arange(0, max_value + 1, max_value // 20))
         plt.savefig("gui_utils/results/pedestrian_counts.png")
 
         # Save the data
@@ -1379,7 +1411,7 @@ class Run(QObject):
         plt.figure(figsize=(10, 6))
         for cluster_key, avg_traj in average_trajectories.items():
             plt.plot(avg_traj[:, 0], avg_traj[:, 1], label=f"Grupul {cluster_key}")
-        plt.legend()
+        plt.legend(loc='upper left')
         plt.title("Traiectoriile medii pe imagine")
         plt.xlabel("Coordonata X")
         plt.ylabel("Coordonata Y")
@@ -1423,8 +1455,8 @@ class Run(QObject):
             least_similar = np.argsort(similarities)
 
             # If they are too similar, ignore them
-            if similarities[least_similar[0]] < 45:
-                continue
+            # if similarities[least_similar[0]] < 45:
+            #     continue
 
             # Plot the least similar trajectories
             plt.figure(figsize=(10, 6))
@@ -1461,7 +1493,7 @@ class MainWindow(QMainWindow):
         self.output = None # Output file path
         self.zones = None # Number of zones
         self.setWindowTitle("Traffic Management System")
-        self.setMinimumSize(QSize(1000, 700))
+        self.setMinimumSize(QSize(1920, 1000))
         centralWidget = QWidget()
         self.setCentralWidget(centralWidget)
         layout = QVBoxLayout(centralWidget)
@@ -1679,9 +1711,19 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, 'EROARE', 'Va rugam sa completati toate campurile')
             return
         else:
-            reply = QMessageBox.question(self, 'Message', 'Sunteti sigur ca datele introduse sunt corecte? Numel fisierului de input: ' + self.filename + ' Numel fisierului de output: ' + self.output + ' Numarul de zone: ' + str(self.zones), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            reply = 'Sunteti sigur ca datele introduse sunt corecte?' + '\n' + 'Numele fisierului de input: ' + self.filename + '\n' + ' Numel fisierului de output: ' + self.output + '\n' + ' Numarul de zone: ' + str(self.zones)
+            box = QMessageBox()
+            box.setIcon(QMessageBox.Question)
+            box.setWindowTitle('Atenție!')
+            box.setText(reply)
+            box.setStandardButtons(QMessageBox.Yes| QMessageBox.No)
+            buttonY = box.button(QMessageBox.Yes)
+            buttonY.setText('Da')
+            buttonN = box.button(QMessageBox.No)
+            buttonN.setText('Nu')
+            box.exec_()
 
-            if reply == QMessageBox.Yes:
+            if box.clickedButton() == buttonY:
                 QMessageBox.warning(self, 'ASTEPTATI', 'Va trebui sa alegeti zonele de interes din cadrul intersectiei. Apasati pe butonul "OK" pentru a continua')
 
                 # Start the run in a separate thread
@@ -1732,22 +1774,27 @@ class MainWindow(QMainWindow):
         if os.path.exists("gui_utils/results/average_trajectories_on_frame.png"):
             self.display_image("gui_utils/results/average_trajectories_on_frame.png", self.textEdit3)
 
-        self.display_paragraph("Primele 10 puncte ale traiectoriilor grupate", self.textEdit3)
-        if os.path.exists("gui_utils/results/first_points.png"):
-            self.display_image("gui_utils/results/first_points.png", self.textEdit3)
+        # self.display_paragraph("Primele 10 puncte ale traiectoriilor grupate", self.textEdit3)
+        # if os.path.exists("gui_utils/results/first_points.png"):
+        #     self.display_image("gui_utils/results/first_points.png", self.textEdit3)
 
-        self.display_paragraph("Ultimele 10 puncte ale traiectoriilor grupate", self.textEdit3)
-        if os.path.exists("gui_utils/results/last_points.png"):
-            self.display_image("gui_utils/results/last_points.png", self.textEdit3)
+        # self.display_paragraph("Ultimele 10 puncte ale traiectoriilor grupate", self.textEdit3)
+        # if os.path.exists("gui_utils/results/last_points.png"):
+        #     self.display_image("gui_utils/results/last_points.png", self.textEdit3)
 
-        self.display_paragraph("Primele 10 puncte din fiecare traiectorie grupate", self.textEdit3)
-        if os.path.exists("gui_utils/results/first_trajectories_clustered.png"):
-            self.display_image("gui_utils/results/first_trajectories_clustered.png", self.textEdit3)
+        # self.display_paragraph("Primele 10 puncte din fiecare traiectorie grupate", self.textEdit3)
+        # if os.path.exists("gui_utils/results/first_trajectories_clustered.png"):
+        #     self.display_image("gui_utils/results/first_trajectories_clustered.png", self.textEdit3)
 
         self.display_paragraph("Traiectoriile grupate per sensul de mers", self.textEdit3)
         # For every image in clusters folder, display it
         for image in os.listdir("gui_utils/results/clusters"):
             self.display_image(f"gui_utils/results/clusters/{image}", self.textEdit3)
+
+        self.display_paragraph("Traiectoriile medii per sensul de mers", self.textEdit3)
+        # For every image in average_trajectories folder, display it
+        for image in os.listdir("gui_utils/results/average_trajectories"):
+            self.display_image(f"gui_utils/results/average_trajectories/{image}", self.textEdit3)
 
         self.display_paragraph("Cele mai putin normale traiectorii per sensul de mers", self.textEdit3)
         # For every image in least_similar folder, display it
